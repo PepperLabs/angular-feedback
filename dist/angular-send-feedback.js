@@ -1,6 +1,6 @@
 /**
  * Angular feedback directive similar to Google Feedback
- * @version v1.2.2 - 2017-09-26 * @link https://github.com/pepperlabs/angular-feedback
+ * @version v2.0.0 - 2017-10-17 * @link https://github.com/pepperlabs/angular-feedback
  * @author Jacob Carter <jacob@ieksolutions.com>
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */
@@ -145,102 +145,120 @@ angular.module("feedback-highlighter.html", []).run(["$templateCache", function(
 }]);
 
 /* globals html2canvas */
-/**
-  Following StandardJS linting rules:
-  https://standardjs.com/
-**/
-function loadScript (src, callback) {
-  var s, r, t
-  r = false
-  s = document.createElement('script')
-  s.type = 'text/javascript'
-  s.src = src
-  s.onload = s.onreadystatechange = function () {
-    if (!r && (!this.readyState || this.readyState === 'complete')) {
-      r = true
-      callback()
-    }
-  }
-  t = document.getElementsByTagName('script')[0]
-  t.parentNode.insertBefore(s, t)
-}
+;(function () {
+  'use strict'
 
-angular.module('angular-send-feedback', ['templates-angularsendfeedback'])
-.directive('feedbackHighlighter', ['$window', function ($window) {
-  return {
-    restrict: 'E',
-    scope: {
-      settings: '=feedbackSettings',
-      next: '=',
-      prev: '=',
-      toggle: '=',
-      close: '='
-    },
-    templateUrl: function (element, attributes) {
-      return attributes.template || 'feedback-highlighter.html'
-    },
-    link: function ($scope, elem, attrs) {
-      $scope.i10n = $scope.settings.i10n[$scope.settings.language]
-      elem = elem.children()[0]
+  angular
+  .module('angular-send-feedback', ['templates-angularsendfeedback'])
+  .directive('feedbackHighlighter', ['$window', function ($window) {
+    return {
+      restrict: 'E',
+      scope: {
+        settings: '=feedbackSettings',
+        next: '=',
+        prev: '=',
+        toggle: '=',
+        close: '='
+      },
+      templateUrl: function (element, attributes) {
+        return attributes.template || 'feedback-highlighter.html'
+      },
+      link: function ($scope, elem, attrs) {
+        $scope.i10n = $scope.settings.i10n[$scope.settings.language]
+        elem = elem.children()[0]
 
-      $scope.dragging = false
-      $scope.style = {}
+        $scope.dragging = false
+        $scope.style = {}
 
-      var prevX, prevY
+        var prevX, prevY
 
-      $scope.move = function (e) {
-        if (!$scope.settings.isDraggable || !$scope.dragging) return
+        $scope.move = function (e) {
+          if (!$scope.settings.isDraggable || !$scope.dragging) return
 
-        var pos = elem.getBoundingClientRect()
+          var pos = elem.getBoundingClientRect()
 
-        if (prevX === null) {
+          if (prevX === null) {
+            prevX = e.pageX
+            prevY = e.pageY
+            return
+          }
+
+          var diffX = e.pageX - prevX
+          var diffY = e.pageY - prevY
+
+          $scope.style.height = pos.height + 'px'
+          $scope.style.width = pos.width + 'px'
+          $scope.style.top = (pos.top + diffY) + 'px'
+          $scope.style.left = (pos.left + diffX) + 'px'
+
           prevX = e.pageX
           prevY = e.pageY
-          return
         }
 
-        var diffX = e.pageX - prevX
-        var diffY = e.pageY - prevY
+        $scope.track = function (e) {
+          if (!$scope.settings.isDraggable) return
+          prevX = null
+          prevY = null
+          $scope.dragging = true
+          e.preventDefault()
+        }
 
-        $scope.style.height = pos.height + 'px'
-        $scope.style.width = pos.width + 'px'
-        $scope.style.top = (pos.top + diffY) + 'px'
-        $scope.style.left = (pos.left + diffX) + 'px'
+        $scope.untrack = function () {
+          $scope.dragging = false
+        }
 
-        prevX = e.pageX
-        prevY = e.pageY
+        var e = angular.element(elem)
+        e.on('touchstart', $scope.track)
+        e.on('touchend', $scope.untrack)
+        e.on('touchmove', $scope.move)
       }
-
-      $scope.track = function (e) {
-        if (!$scope.settings.isDraggable) return
-        prevX = null
-        prevY = null
-        $scope.dragging = true
-        e.preventDefault()
-      }
-
-      $scope.untrack = function () {
-        $scope.dragging = false
-      }
-
-      var e = angular.element(elem)
-      e.on('touchstart', $scope.track)
-      e.on('touchend', $scope.untrack)
-      e.on('touchmove', $scope.move)
     }
-  }
-}])
+  }])
+})(); // eslint-disable-line semi
 
-.directive('angularFeedback', ['$document', '$window', '$http', function ($document, $window, $http) {
-  return {
-    restrict: 'EA',
-    scope: {
-      options: '='
-    },
-    templateUrl: function (element, attributes) {
-      return attributes.template || 'angularsendfeedback.html'
-    },
-    link: function ($scope) {
+;(function () {
+  'use strict'
+  /**
+    Following StandardJS linting rules:
+    https://standardjs.com/
+  **/
+  function loadScript (src, callback) {
+    var s, r, t
+    r = false
+    s = document.createElement('script')
+    s.type = 'text/javascript'
+    s.src = src
+    s.onload = s.onreadystatechange = function () {
+      if (!r && (!this.readyState || this.readyState === 'complete')) {
+        r = true
+        callback()
+      }
+    }
+    t = document.getElementsByTagName('script')[0]
+    t.parentNode.insertBefore(s, t)
+  }
+
+  angular
+    .module('angular-send-feedback')
+    .directive('angularFeedback', AngularFeedbackDirective)
+
+  AngularFeedbackDirective.$inject = ['$document', '$window', '$http']
+
+  function AngularFeedbackDirective ($document, $window, $http) {
+    var directive = {
+      restrict: 'EA',
+      scope: {
+        options: '='
+      },
+      templateUrl: function (element, attributes) {
+        return attributes.template || 'angularsendfeedback.html'
+      },
+      link: link
+    }
+
+    return directive
+
+    function link ($scope) {
       var options = $scope.options
       var settings = angular.extend({
         ajaxURL: '',
@@ -839,4 +857,4 @@ angular.module('angular-send-feedback', ['templates-angularsendfeedback'])
       }
     }
   }
-}])
+})(); // eslint-disable-line semi

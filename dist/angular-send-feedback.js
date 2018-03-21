@@ -1,6 +1,6 @@
 /**
  * Angular feedback directive similar to Google Feedback
- * @version v2.0.0 - 2017-10-17 * @link https://github.com/pepperlabs/angular-feedback
+ * @version v2.0.0 - 2018-03-21 * @link https://github.com/pepperlabs/angular-feedback
  * @author Jacob Carter <jacob@ieksolutions.com>
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */
@@ -45,7 +45,7 @@ angular.module("angularsendfeedback.html", []).run(["$templateCache", function($
     "      <button class=\"feedback-close-btn feedback-btn-blue\" ng-click='close()'>{{i10n.okButton}}</button>\n" +
     "    </div>\n" +
     "\n" +
-    "    <feedback-highlighter ng-show=\"showFeedbackHighlighter\" feedback-settings='settings'\n" +
+    "    <feedback-highlighter ng-if=\"showFeedbackHighlighter\" feedback-settings='settings'\n" +
     "      next='takeScreenshot' prev='backToWelcome' toggle='setHighlight' close='close'>\n" +
     "    </feedback-highlighter>\n" +
     "\n" +
@@ -369,6 +369,8 @@ angular.module("feedback-highlighter.html", []).run(["$templateCache", function(
         initialBox: true
       }, options)
 
+      console.log('angular-feedback settings', settings)
+
       $scope.i10n = settings.i10n[settings.language]
 
       $scope.settings = settings
@@ -418,7 +420,12 @@ angular.module("feedback-highlighter.html", []).run(["$templateCache", function(
         $scope.feedbackCategory = cat
         $scope.feedbackNote = note
         if ($scope.feedbackNote && $scope.feedbackNote.length) {
-          showCanvas()
+          if (settings.highlightElement) {
+            showCanvas()
+          } else {
+            $scope.showWelcome = false
+            $scope.takeScreenshot()
+          }
         }
       }
 
@@ -688,6 +695,7 @@ angular.module("feedback-highlighter.html", []).run(["$templateCache", function(
           }
 
           $scope.takeScreenshot = function () {
+            console.log('takeScreenshot')
             canDraw = false
             $window.scrollTo(0, 0) // scroll to top
             $scope.showFeedbackHelpers = false
@@ -733,11 +741,15 @@ angular.module("feedback-highlighter.html", []).run(["$templateCache", function(
           }
 
           $scope.backToHighlight = function (e) {
-            canDraw = true
-            $scope.showCanvas = true
-            $scope.showOverview = false
-            $scope.showFeedbackHelpers = true
-            $scope.showFeedbackHighlighter = true
+            if (settings.highlightElement) {
+              canDraw = true
+              $scope.showCanvas = true
+              $scope.showOverview = false
+              $scope.showFeedbackHelpers = true
+              $scope.showFeedbackHighlighter = true
+            } else {
+              $scope.showWelcome = true
+            }
           }
 
           $scope.submit = function () {

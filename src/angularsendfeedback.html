@@ -35,7 +35,7 @@
       <button class="feedback-close-btn feedback-btn-blue" ng-click='close()'>{{i10n.okButton}}</button>
     </div>
 
-    <feedback-highlighter ng-show="showFeedbackHighlighter" feedback-settings='settings'
+    <feedback-highlighter ng-if="showFeedbackHighlighter" feedback-settings='settings'
       next='takeScreenshot' prev='backToWelcome' toggle='setHighlight' close='close'>
     </feedback-highlighter>
 

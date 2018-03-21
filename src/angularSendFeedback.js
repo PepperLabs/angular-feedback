@@ -272,7 +272,12 @@
         $scope.feedbackCategory = cat
         $scope.feedbackNote = note
         if ($scope.feedbackNote && $scope.feedbackNote.length) {
-          showCanvas()
+          if (settings.highlightElement) {
+            showCanvas()
+          } else {
+            $scope.showWelcome = false
+            $scope.takeScreenshot()
+          }
         }
       }
 
@@ -542,6 +547,7 @@
           }
 
           $scope.takeScreenshot = function () {
+            console.log('takeScreenshot')
             canDraw = false
             $window.scrollTo(0, 0) // scroll to top
             $scope.showFeedbackHelpers = false
@@ -587,11 +593,15 @@
           }
 
           $scope.backToHighlight = function (e) {
-            canDraw = true
-            $scope.showCanvas = true
-            $scope.showOverview = false
-            $scope.showFeedbackHelpers = true
-            $scope.showFeedbackHighlighter = true
+            if (settings.highlightElement) {
+              canDraw = true
+              $scope.showCanvas = true
+              $scope.showOverview = false
+              $scope.showFeedbackHelpers = true
+              $scope.showFeedbackHighlighter = true
+            } else {
+              $scope.showWelcome = true
+            }
           }
 
           $scope.submit = function () {
